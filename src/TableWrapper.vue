@@ -3,46 +3,66 @@
     :columnDefs="colDefs"
     :rowData="rowData"
     class="ag-grid-container"
-    :class="tableClass"
+    :class="darkMode ? `${theme}-dark` : theme"
     @grid-ready="onGridReady"
     :defaultColDef="defaultColDef"
     :pagination="true"
     :paginationPageSize="20"
     :paginationPageSizeSelector="[10, 20, 50, 100]"
-    >
+  >
   </ag-grid-vue>
 </template>
   
 <script setup>
-// other
-import { ref, reactive, onMounted } from 'vue';
-import { faker } from '@faker-js/faker'; // Faker library
+// Import core dependencies
+import { ref, onMounted, watch } from 'vue';
+import { faker } from '@faker-js/faker';
 
-// ag grid
-import { AgGridVue } from '@ag-grid-community/vue3'; // Vue component
-import '@ag-grid-community/styles/ag-grid.css'; // mandatory
-import '@ag-grid-community/styles/ag-theme-quartz.css'; // optional, but you need one (other options: ag-theme-alpine, ag-theme-balham, ag-theme-material, ag-theme-dark, ag-theme-fresh)
-const tableClass = ref('ag-theme-quartz'); // this must match the theme you are using
+// AG Grid imports
+import { AgGridVue } from '@ag-grid-community/vue3';
 import { ClientSideRowModelModule } from '@ag-grid-community/client-side-row-model';
 import { ModuleRegistry } from '@ag-grid-community/core';
+
+// AG Grid styles
+import '@ag-grid-community/styles/ag-grid.css';
+import '@ag-grid-community/styles/ag-theme-quartz.css';
+import '@ag-grid-community/styles/ag-theme-balham.css';
+import '@ag-grid-community/styles/ag-theme-material.css';
+import '@ag-grid-community/styles/ag-theme-alpine.css';
+
+const theme = ref('ag-theme-quartz'); // select your theme here
+
+// Register required AG Grid modules
 ModuleRegistry.registerModules([ClientSideRowModelModule]);
 
-// Reactive state for AG Grid data and configuration
-const rowData = ref(); // Holds the data for the grid rows
-const colDefs = ref();  // Holds the column definitions
-const gridApi = ref(null); // Reference to the AG Grid API (useful for interacting with the grid)
+// Props
+const props = defineProps({
+  darkMode: {
+    type: Boolean,
+    default: false
+  }
+});
 
-// Default Column Definitions: Applied to all columns unless overridden
+// Reactive state
+const rowData = ref([]);
+const colDefs = ref([]);
+const gridApi = ref(null);
+
+// Default column configuration
 const defaultColDef = {
-  sortable: true,   // Enable sorting on all columns
-  filter: true,     // Enable filtering on all columns
-  resizable: true,  // Enable column resizing
-  floatingFilter: true, // Show filter input row below headers
-  flex: 1,          // Distribute column width evenly
-  minWidth: 100,    // Minimum column width
+  sortable: true,
+  filter: true,
+  resizable: true,
+  floatingFilter: true,
+  flex: 1,
+  minWidth: 100,
 };
 
-// Function to generate fake car data
+/**
+ * Generates fake vehicle data for the table
+ * @param {number} count - Number of records to generate
+ * @returns {Array} Array of car data objects
+ */
 const generateFakeCarData = (count) => {
   const data = [];
   for (let i = 0; i < count; i++) {
@@ -51,55 +71,63 @@ const generateFakeCarData = (count) => {
       make: faker.vehicle.manufacturer(),
       model: faker.vehicle.model(),
       type: faker.vehicle.type(),
-      year: faker.number.int({ min: 1990, max: new Date().getFullYear() + 1 }), // Year between 1990 and next year
+      year: faker.number.int({ min: 1990, max: new Date().getFullYear() + 1 }),
       color: faker.vehicle.color(),
       vin: faker.vehicle.vin(),
-      price: parseFloat(faker.finance.amount({ min: 5000, max: 80000, dec: 2 })), // Price with 2 decimal places
+      price: parseFloat(faker.finance.amount({ min: 5000, max: 80000, dec: 2 })),
     });
   }
   return data;
 };
 
-// Define Columns
+// Configure table columns with appropriate filters and formatters
 const setupColumns = () => {
   colDefs.value = [
-    { field: 'make', headerName: 'Make', filter: 'agTextColumnFilter' }, // Specify text filter
+    { field: 'make', headerName: 'Make', filter: 'agTextColumnFilter' },
     { field: 'model', headerName: 'Model' },
     { field: 'type', headerName: 'Type' },
-    { field: 'year', headerName: 'Year', filter: 'agNumberColumnFilter' }, // Specify number filter
+    { field: 'year', headerName: 'Year', filter: 'agNumberColumnFilter' },
     { field: 'color', headerName: 'Color' },
-    { field: 'vin', headerName: 'VIN' },
+    { field: 'vin', headerName: 'VIN', hide: true },
     {
       field: 'price',
       headerName: 'Price',
       filter: 'agNumberColumnFilter',
-      valueFormatter: params => { // Format price as currency
-        return '$' + params.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      valueFormatter: params => {
+        return '$' + params.value.toLocaleString(undefined, { 
+          minimumFractionDigits: 2, 
+          maximumFractionDigits: 2 
+        });
       }
     },
   ];
 };
 
-// Load Data
+// Load sample data into the table
 const setupData = () => {
-  const rowCount = 2000; // Number of rows to generate
-  rowData.value = generateFakeCarData(rowCount); // Generate and set the data
+  rowData.value = generateFakeCarData(500); // Reduced from 2000 for better initial performance
 };
 
-// Callback function when AG Grid is ready
+// AG Grid initialization callback
 const onGridReady = (params) => {
-  gridApi.value = params.api; // Store the grid API
-  console.log('AG Grid API ready:', gridApi.value);
-  // Example: You could auto-size columns here if needed
-  gridApi.value.autoSizeAllColumns();
+  gridApi.value = params.api;
+  gridApi.value.sizeColumnsToFit();
 };
 
-// Load data when the component mounts
-onMounted(async () => {
-  setupColumns(); // Define the columns
-  setupData(); // Load the data
+// Initialize the table
+onMounted(() => {
+  setupColumns();
+  setupData();
 });
 
+// Watch for dark mode changes and refresh the grid to properly apply theme
+watch(() => props.darkMode, () => {
+  if (gridApi.value) {
+    setTimeout(() => {
+      gridApi.value.refreshCells({ force: true });
+    }, 0);
+  }
+});
 </script>
 
 <style scoped>

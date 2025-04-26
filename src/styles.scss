@@ -3,4 +3,13 @@ body {
   margin: 0;
   padding: 0;
   background: #f4f4f4;
+  transition: background-color 0.3s ease;
+}
+
+/* System dark mode detection (optional) */
+@media (prefers-color-scheme: dark) {
+  body {
+    background: #1e1e1e;
+    color: #e0e0e0;
+  }
 }

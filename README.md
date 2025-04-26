@@ -89,26 +89,6 @@ const setupColumns = () => {
 };
 ```
 
-### Changing Data Source
-
-To use your own data instead of the generated fake data:
-
-1. Replace the `setupData` function in `TableWrapper.vue`:
-
-```javascript
-const setupData = async () => {
-  // Example with API call
-  try {
-    const response = await fetch('your-api-endpoint');
-    const data = await response.json();
-    rowData.value = data;
-  } catch (error) {
-    console.error('Error fetching data:', error);
-    rowData.value = []; // Fallback to empty data
-  }
-};
-```
-
 ### Adjusting Table Height
 
 The table container has a fixed height that can be adjusted in `App.vue`:
@@ -144,25 +124,6 @@ You can extend the table functionality with additional AG Grid features:
 - Cell editing
 
 For these features, you may need to upgrade to AG Grid Enterprise or add community modules.
-
-### Styling the Table
-
-AG Grid provides multiple themes. To change the theme:
-
-1. Import a different theme CSS in `TableWrapper.vue`:
-
-```javascript
-// Choose one of the following:
-import '@ag-grid-community/styles/ag-theme-alpine.css';
-// import '@ag-grid-community/styles/ag-theme-balham.css';
-// import '@ag-grid-community/styles/ag-theme-material.css';
-```
-
-2. Update the `tableClass` ref in the same file:
-
-```javascript
-const tableClass = ref('ag-theme-alpine'); // Match the theme you imported
-```
 
 ## License
 
