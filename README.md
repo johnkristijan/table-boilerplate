@@ -89,17 +89,6 @@ const setupColumns = () => {
 };
 ```
 
-### Adjusting Table Height
-
-The table container has a fixed height that can be adjusted in `App.vue`:
-
-```html
-<div class="table-container" style="height: 500px;">
-  <TableWrapper />
-</div>
-```
-
-Change the `500px` value to your preferred height.
 
 ## Building for Production
 
